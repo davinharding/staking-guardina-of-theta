@@ -2,110 +2,32 @@
 
 // @Davin - This is simply the sappy seals staking contract copied into a new hardhat repo, will need to go in an retrofit all after this comment
 
-// @Davin - Need to add all openzeppelin import statements here
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+import "hardhat/console.sol";
 
 pragma solidity ^0.8.13;
 
-/**
- * @title UntransferableERC721
- * @author @lozzereth (www.allthingsweb3.com)
- * @notice An NFT implementation that cannot be transfered no matter what
- *         unless minting or burning.
- */
-contract UntransferableERC721 is ERC721, Ownable {
-    /// @dev Base URI for the underlying token
-    string private baseURI;
-
-    /// @dev Thrown when an approval is made while untransferable
-    error Unapprovable();
-
-    /// @dev Thrown when making an transfer while untransferable
-    error Untransferable();
-
-    constructor(string memory name_, string memory symbol_)
-    ERC721(name_, symbol_)
-    {}
-
-    /**
-     * @dev Prevent token transfer unless burn
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal override(ERC721) {
-        if (to != address(0) && from != address(0)) {
-            revert Untransferable();
-        }
-        super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    /**
-     * @dev Prevent approvals of staked token
-     */
-    function approve(address, uint256) public virtual override {
-        revert Unapprovable();
-    }
-
-    /**
-     * @dev Prevent approval of staked token
-     */
-    function setApprovalForAll(address, bool) public virtual override {
-        revert Unapprovable();
-    }
-
-    /**
-     * @notice Set the base URI for the NFT
-     */
-    function setBaseURI(string memory baseURI_) public virtual onlyOwner {
-        baseURI = baseURI_;
-    }
-
-    /**
-     * @dev Returns the base URI
-     */
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseURI;
-    }
-}
-
 // 
 /**
- * @title StakeSeals
- * @custom:website www.sappyseals.com
- * @author Original author @lozzereth (www.allthingsweb3.com), forked for Seals.
- * Make sure to check him out and give him a follow on twitter xoxo
+ * @title StakeThetaVibes
+ * @custom:website www.thetavibes.com (subject to change)
+ * @author Original author @lozzereth (www.allthingsweb3.com), forked and modified for the Theta Vibes project.
+ * Make sure to check him out and give him a follow on twitter 
  */
-interface IStakeSeals {
-    function setTokenAddress(address _tokenAddress) external;
 
-    function depositsOf(address account)
-        external
-        view
-        returns (uint256[] memory);
-
-    function findRate(uint256 tokenId) external view returns (uint256 rate);
-
-    function calculateRewards(address account, uint256[] memory tokenIds)
-        external
-        view
-        returns (uint256[] memory rewards);
-
-    function claimRewards(uint256[] calldata tokenIds) external;
-
-    function deposit(uint256[] calldata tokenIds) external;
-
-    function admin_deposit(uint256[] calldata tokenIds) external;
-
-    function withdraw(uint256[] calldata tokenIds) external;
-
-    function tokenRarity(uint256 tokenId)
-        external
-        view
-        returns (uint256 rarity);
-}
-
-contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
+contract StakeThetaVibes is ERC721, Ownable, IERC721Receiver {
 
     event ClaimedPixl(
         address person,
@@ -117,24 +39,31 @@ contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
     using Math for uint256;
 
     /// @notice Contract addresses
-    IERC721 public erc721Address;
+    IERC721[6] public erc721Addresses;
     IERC20 public erc20Address;
-    IStakeSeals public stakeSealsV1;
     uint256 public EXPIRATION;
     /// @notice Track the deposit and claim state of tokens
     struct StakedToken {
         uint256 claimedAt;
     }
+    /// @notice Token info to be retrieved per account
+    struct TokenPerAccount {
+      address contractAddress;
+      uint256 id;
+    }
+
+    uint256 rate;
+
     mapping(uint256 => StakedToken) public staked;
 
-    mapping(uint256 => uint256) public rewardRate;
+    mapping(address => TokenPerAccount[]) public tokensPerAccount;
 
     bool public pauseTokenEmissions = false;
 
     /// @notice Token non-existent
     error TokenNonExistent(uint256 tokenId);
 
-    /// @notice Not an owner of the frog
+    /// @notice Not an owner of the token
     error TokenNonOwner(uint256 tokenId);
 
     /// @notice Using a non-zero value
@@ -144,18 +73,13 @@ contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
     bool public pausedDepositBlocks = false;
 
     constructor(
-        IERC721 _erc721Address,
+        IERC721[6] _erc721Addresses,
         IERC20 _erc20Address,
-        IStakeSeals _stakeSealsV1Address,
-        uint256[] memory _defaultRates
-    ) UntransferableERC721("StakedSealsV2", "sSEAL") {
-        erc721Address = _erc721Address;
+        uint256 _rate
+    ) public {
+        erc721Addresses = _erc721Addresses;
         erc20Address = _erc20Address;
-        stakeSealsV1 = _stakeSealsV1Address;
-        setBaseURI("ipfs://QmXUUXRSAJeb4u8p4yKHmXN1iAKtAV7jwLHjw35TNm5jN7/");
-        for (uint256 i = 0; i < 7; i++) {
-            rewardRate[i] = _defaultRates[i];
-        }
+        rate = _rate;
         EXPIRATION = block.number + 1000000000000000000000;
     }
 
@@ -168,22 +92,9 @@ contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
     function depositsOf(address account)
         external
         view
-        returns (uint256[] memory)
+        returns (StakedToken[] memory)
     {
-        unchecked {
-            uint256 tokenIdsIdx;
-            uint256 tokenIdsLength = balanceOf(account);
-            uint256[] memory tokenIds = new uint256[](tokenIdsLength);
-            for (uint256 i; tokenIdsIdx != tokenIdsLength; ++i) {
-                if (!_exists(i)) {
-                    continue;
-                }
-                if (ownerOf(i) == account) {
-                    tokenIds[tokenIdsIdx++] = i;
-                }
-            }
-            return tokenIds;
-        }
+       return tokensPerAccount[account];
     }
 
     /**
@@ -230,30 +141,11 @@ contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
             revert TokenNonOwner(tokenId);
         }
         unchecked {
-            uint256 rate = _findRate(tokenId);
             uint256 rewards = rate *
                 (Math.min(block.number, EXPIRATION) -
                     staked[tokenId].claimedAt);
             return rewards;
         }
-    }
-
-    /**
-     * @notice Finds the rates of NFTs from the old StakeSeal contract
-     * @param tokenId - The id where you want to find the rate
-     * @return rate - The rate
-     */
-    function findRate(uint256 tokenId) external view returns (uint256 rate) {
-        return _findRate(tokenId);
-    }
-
-    function _findRate(uint256 tokenId) private view returns (uint256 rate) {
-        uint256 rarity = stakeSealsV1.tokenRarity(tokenId);
-        uint256 perDay = rewardRate[rarity];
-        // 6000 blocks per day
-        // perDay / 6000 = reward per block
-        rate = (perDay * 1e18) / 6000;
-        return rate;
     }
 
     /**
@@ -384,17 +276,6 @@ contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
     }
 
     /**
-     * @dev Modify the Staking contract address
-     * @param _stakingContractV1Address - the new Staking contract
-     */
-    function setStakedSealsAddress(address _stakingContractV1Address)
-        external
-        onlyOwner
-    {
-        stakeSealsV1 = IStakeSeals(_stakingContractV1Address);
-    }
-
-    /**
      * @dev Modify the ERC721 contract address
      * @param _newErc721Address - the new Staking contract
      */
@@ -404,11 +285,10 @@ contract StakeSealsV2 is UntransferableERC721, IERC721Receiver {
 
     /**
      * @dev Update the rates
-     * @param index - the index of the new rate
-     * @param rate - the new rate
+     * @param _rate - the new rate
      */
-    function updateRewardRate(uint256 index, uint256 rate) external onlyOwner {
-        rewardRate[index] = rate;
+    function updateRewardRate(uint256 _rate) external onlyOwner {
+        rate = _rate;
     }
 
     /**
