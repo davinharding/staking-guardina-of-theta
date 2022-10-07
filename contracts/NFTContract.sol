@@ -1061,7 +1061,7 @@ pragma solidity ^0.8.0;
  
  
  
-contract SappySeals is ERC721URIStorage, Ownable{
+contract NFTContract is ERC721URIStorage, Ownable{
  
     event MintSeals (address indexed minter, uint256 startWith, uint256 times);
     

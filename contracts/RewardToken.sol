@@ -58,7 +58,7 @@ interface IERC20Metadata is IERC20 {
     function decimals() external view returns (uint8);
 }
 
-contract PIXL is Context, IERC20, IERC20Metadata, Ownable {
+contract RewardToken is Context, IERC20, IERC20Metadata, Ownable {
     mapping (address => uint256) private _balances;
     mapping(address => bool) private whitelist;
     mapping (address => mapping (address => uint256)) private _allowances;
