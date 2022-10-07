@@ -1219,16 +1219,16 @@ contract UntransferableERC721 is ERC721, Ownable {
 /**
  * @title StakeThetaVibes
  * @custom:website www.thetavibes.com
- * @author Original author @lozzereth (www.allthingsweb3.com), forked for Seals.
+ * @author Original author @lozzereth (www.allthingsweb3.com), forked for Theta Vibes.
  * Make sure to check him out and give him a follow on twitter xoxo
  */
 
 contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
 
-    event ClaimedPixl(
+    event ClaimedTvibe(
         address person,
-        uint256[] sealIds,
-        uint256 pixlAmount,
+        uint256[] tokenIds,
+        uint256 tvibeAmount,
         uint256 claimedAt
     );
 
@@ -1264,7 +1264,7 @@ contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
         IERC721 _erc721Address,
         IERC20 _erc20Address,
         uint256 _rate
-    ) UntransferableERC721("StakedSealsV2", "sSEAL") {
+    ) UntransferableERC721("StakeThetaVibe", "sTVIBE") {
         erc721Address = _erc721Address;
         erc20Address = _erc20Address;
         setBaseURI("ipfs://QmXUUXRSAJeb4u8p4yKHmXN1iAKtAV7jwLHjw35TNm5jN7/");
@@ -1343,7 +1343,7 @@ contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
             revert TokenNonOwner(tokenId);
         }
         unchecked {
-            uint256 rate = _findRate(tokenId);
+            uint256 rate = _findRate();
             uint256 rewards = rate *
                 (Math.min(block.number, EXPIRATION) -
                     staked[tokenId].claimedAt);
@@ -1352,15 +1352,14 @@ contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
     }
 
     /**
-     * @notice Finds the rates of NFTs from the old StakeSeal contract
-     * @param tokenId - The id where you want to find the rate
+     * @notice Finds the rate per block in gwei
      * @return rate - The rate
      */
-    function findRate(uint256 tokenId) external view returns (uint256 rate) {
-        return _findRate(tokenId);
+    function findRate() external view returns (uint256 rate) {
+        return _findRate();
     }
 
-    function _findRate(uint256 tokenId) private view returns (uint256 rate) {
+    function _findRate() private view returns (uint256 rate) {
          uint256 perDay = rewardRate;
         // 6000 blocks per day
         // perDay / 6000 = reward per block
@@ -1410,7 +1409,7 @@ contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
                 staked[tokenId].claimedAt = block.number;
             }
         }
-        emit ClaimedPixl(msg.sender, tokenIds, reward, block.number);
+        emit ClaimedTvibe(msg.sender, tokenIds, reward, block.number);
         if (reward > 0 && !pauseTokenEmissions) {
             _safeTransferRewards(msg.sender, reward);
         }
@@ -1506,11 +1505,10 @@ contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
 
     /**
      * @dev Update the rates
-     * @param index - the index of the new rate
      * @param rate - the new rate
      */
-    function updateRewardRate(uint256 index, uint256 rate) external onlyOwner {
-        rewardRate[index] = rate;
+    function updateRewardRate(uint256 rate) external onlyOwner {
+        rewardRate = rate;
     }
 
     /**
