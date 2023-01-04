@@ -1,10 +1,4 @@
-/**
- *Submitted for verification at Etherscan.io on 2022-07-18
-*/
-
 // SPDX-License-Identifier: MIT
-
-import "hardhat/console.sol";
 
 pragma solidity ^0.8.0;
 
@@ -1220,12 +1214,12 @@ contract UntransferableERC721 is ERC721, Ownable {
 // 
 /**
  * @title StakeThetaVibes
- * @custom:website www.thetavibes.com
- * @author Original author @lozzereth (www.allthingsweb3.com), forked for Theta Vibes.
- * Make sure to check him out and give him a follow on twitter xoxo
+ * @custom:website www.thetavibes.io
+ * @author Original author @lozzereth (www.allthingsweb3.com), forked for Theta Vibes by Davin Harding @cryptodavin on twitter(dot)com.
+ * Make sure to check him out and give him a follow on twitter
  */
 
-contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
+contract StakeGuardian is UntransferableERC721, IERC721Receiver {
 
     event ClaimedTvibe(
         address person,
@@ -1266,10 +1260,10 @@ contract StakeThetaVibes is UntransferableERC721, IERC721Receiver {
         IERC721 _erc721Address,
         IERC20 _erc20Address,
         uint256 _rate
-    ) UntransferableERC721("StakeThetaVibe", "sTVIBE") {
+    ) UntransferableERC721("StakeGuardian", "sGUARD") {
         erc721Address = _erc721Address;
         erc20Address = _erc20Address;
-        setBaseURI("ipfs://QmXUUXRSAJeb4u8p4yKHmXN1iAKtAV7jwLHjw35TNm5jN7/");
+        setBaseURI("https://cq4btd6fkvsbcjmg6qywqut4tjiov2gvgbgcyfugeiq24gi.arweave.net/FDgZj8VVZBElhvQxaFJ8mlDq6N_-UwT_CwWhiI-hrhk");
         rewardRate = _rate;
         EXPIRATION = block.number + 1000000000000000000000;
     }

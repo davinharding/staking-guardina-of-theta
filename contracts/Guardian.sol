@@ -1396,7 +1396,7 @@ contract Guardian is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint currentSupply = totalSupply();
         require(currentSupply < MAX_NFT_SUPPLY, "Sale has already ended");
 
-        return 500000000000000000000; // 1 - 110 500 TFUEL
+        return 1000000000000000000; // 1 - 110 500 TFUEL
     }
 
     /**

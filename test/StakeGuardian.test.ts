@@ -3,7 +3,7 @@ import { ethers, network } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("StakeThetaVibes", function () {
+describe("StakeGuardian", function () {
   let RewardToken: ContractFactory, 
   rewardToken: Contract, 
   rewardTokenAddress: string, 
@@ -29,12 +29,12 @@ describe("StakeThetaVibes", function () {
 
     // Nft
     NFTContract = await ethers.getContractFactory('Guardian');
-    nftContract = await NFTContract.deploy(owner.address,'testURI');
+    nftContract = await NFTContract.deploy(owner.address,'https://cq4btd6fkvsbcjmg6qywqut4tjiov2gvgbgcyfugeiq24gi.arweave.net/FDgZj8VVZBElhvQxaFJ8mlDq6N_-UwT_CwWhiI-hrhk');
     await nftContract.deployed();
     nftContractAddress = nftContract.address;
 
     // Staking Contract
-    StakingContract = await ethers.getContractFactory('StakeThetaVibes');
+    StakingContract = await ethers.getContractFactory('StakeGuardian');
     stakingContract = await StakingContract.deploy(nftContractAddress, rewardTokenAddress, 100);
     await stakingContract.deployed();
     stakingContractAddress = stakingContract.address;
@@ -54,25 +54,25 @@ describe("StakeThetaVibes", function () {
       value: ethers.utils.parseEther("500"),
     });
 
-    // // stake approval for addr1
+    // stake approval for addr1
     await nftContract.connect(addr1).setApprovalForAll(stakingContractAddress, true);
 
     // stake nft from addr1
     await stakingContract.connect(addr1).deposit([1,2]);
   });
 
-  xit('should be able to print the deployed contract addresses and confirm they are strings', async () => {
+  it('should be able to print the deployed contract addresses and confirm they are strings', async () => {
 
     expect(rewardTokenAddress).to.be.a('string');
     expect(nftContractAddress).to.be.a('string');
     expect(stakingContractAddress).to.be.a('string');
   });
 
-  xit('should deposit 100000 reward tokens to staking contract', async () => {
-    expect((await rewardToken.balanceOf(stakingContractAddress)).toNumber()).to.equal(1000000);
+  it('should deposit 100000 reward tokens to staking contract', async () => {
+    expect(parseInt(ethers.utils.formatEther((await rewardToken.balanceOf(stakingContractAddress))))).to.equal(1000000);
   });
 
-  xit('should allow the user to stake their NFTs', async () => {
+  it('should allow the user to stake their NFTs', async () => {
     const idArr = await stakingContract.depositsOf(addr1.address);
     expect(parseInt(idArr[0])).to.equal(1);
     expect(parseInt(idArr[1])).to.equal(2);
@@ -96,7 +96,7 @@ describe("StakeThetaVibes", function () {
     // reward should be 100 tokens per day based on deploy params of stake contract
     expect(Math.round(rewardInEth)).to.equal(200);
   });
-  xit('should allow user to unstake their nft and have the corret balance of reward tokens and nfts', async () => {
+  it('should allow user to unstake their nft and have the corret balance of reward tokens and nfts', async () => {
     // advance 6000 block ~ 1 day
     await network.provider.send("hardhat_mine", [ethers.utils.hexlify(6000)]);
     // unstake 1 nft
@@ -112,7 +112,7 @@ describe("StakeThetaVibes", function () {
     // check that balance of rewards tokens is equal to 1 day = 100
     expect(Math.round(parseInt(rewards))).to.equal(100);    
   });
-  xit('should allow unstaking of multiple nfts at once', async () => {
+  it('should allow unstaking of multiple nfts at once', async () => {
     // advance 6000 block ~ 1 day
     await network.provider.send("hardhat_mine", [ethers.utils.hexlify(6000)]);
     // unstake 1 nft
@@ -129,7 +129,7 @@ describe("StakeThetaVibes", function () {
     // check that balance of rewards tokens is equal to 1 day = 100
     expect(Math.round(parseInt(rewards))).to.equal(200);  
   })
-  xit('should allow rewards to be claimed without unstaking the NFT', async () => {
+  it('should allow rewards to be claimed without unstaking the NFT', async () => {
     // advance 6000 block ~ 1 day
     await network.provider.send("hardhat_mine", [ethers.utils.hexlify(6000)]);
     await stakingContract.connect(addr1).claimRewards([1,2]);
@@ -137,5 +137,10 @@ describe("StakeThetaVibes", function () {
     const rewards = ethers.utils.formatEther(await rewardToken.balanceOf(addr1.address))
     // check that balance of rewards tokens is equal to 1 day = 100
     expect(Math.round(parseInt(rewards))).to.equal(200); 
+  });
+  it('should allow the reward rate to be changed', async () => {
+    
+    await stakingContract.updateRewardRate(200);
+    expect(parseInt(await stakingContract.rewardRate())).to.equal(200);
   });
 });
