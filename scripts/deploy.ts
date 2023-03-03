@@ -5,11 +5,11 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const NFTContract = await ethers.getContractFactory('StakeGloriousGuitar');
+  const NFTContract = await ethers.getContractFactory('StakeAiSamurai');
   const nftContract = await NFTContract.deploy(
-    "0xc22c7bc45e8b2acec53c474462cb42ff2536cf54", // erc721 address 
+    "0xf7578080ffae18c9e3ba2eccd9628946816a7dfe", // erc721 address 
     "0x14e4c61d6aa9accda3850b201077cebf464dcb31", // erc20 address
-    1, // reward rate per day
+    15, // reward rate per day
     );
   await nftContract.deployed();
 

@@ -1213,13 +1213,13 @@ contract UntransferableERC721 is ERC721, Ownable {
 
 // 
 /**
- * @title StakeGloriousGuitar
+ * @title StakeRastaman
  * @custom:website www.thetavibes.io
  * @author Original author @lozzereth (www.allthingsweb3.com), forked for Theta Vibes by Davin Harding @cryptodavin on twitter(dot)com.
  * Make sure to check them out and give them a follow on twitter
  */
 
-contract StakeGloriousGuitar is UntransferableERC721, IERC721Receiver {
+contract StakeRastaman is UntransferableERC721, IERC721Receiver {
 
     event ClaimedTvibe(
         address person,
@@ -1260,7 +1260,7 @@ contract StakeGloriousGuitar is UntransferableERC721, IERC721Receiver {
         IERC721 _erc721Address,
         IERC20 _erc20Address,
         uint256 _rate
-    ) UntransferableERC721("StakeGloriousGuitar", "sGG") {
+    ) UntransferableERC721("StakeRastaman", "sRM") {
         erc721Address = _erc721Address;
         erc20Address = _erc20Address;
         setBaseURI("TO_BE_UPDATED");
