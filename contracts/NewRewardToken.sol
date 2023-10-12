@@ -771,7 +771,7 @@ abstract contract ERC20Burnable is Context, ERC20 {
 // File: contracts/3_Ballot.sol
 
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
 
 

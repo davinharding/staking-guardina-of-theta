@@ -3,13 +3,13 @@ import { ethers } from "hardhat";
 async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deploying contracts with the account:", deployer.address);
-  console.log("Account balance:", (await deployer.getBalance()).toString());
+  console.log("Account balance:", (await ethers.provider.getBalance(deployer.address)).toString());
 
-  const NFTContract = await ethers.getContractFactory('StakeAiSamurai');
+  const NFTContract = await ethers.getContractFactory('StakeLilMonsters');
   const nftContract = await NFTContract.deploy(
-    "0xf7578080ffae18c9e3ba2eccd9628946816a7dfe", // erc721 address 
+    "0xDe402d4dEfF8CEa11F515a7BeF886277b32CBC5a", // erc721 address 
     "0x14e4c61d6aa9accda3850b201077cebf464dcb31", // erc20 address
-    15, // reward rate per day
+    1, // reward rate per day
     );
   await nftContract.deployed();
 
